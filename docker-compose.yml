@@ -1,0 +1,55 @@
+# Desarrollo local: frontend Angular y backend Go. La base administrativa es
+# la configurada en backend/.env (en local, el contenedor mysql-bd).
+# Los respaldos se escriben en DIR_RESPALDOS_HOST (archivo .env junto a este
+# compose). Sin definirla, van a ./respaldos-local. Para la MSA, apunte a la
+# carpeta donde esté montada, p. ej. DIR_RESPALDOS_HOST=/Volumes/MSA/Respaldos
+services:
+  frontend:
+    image: node:24-alpine
+    container_name: sirespaldos-frontend
+    working_dir: /app
+    ports:
+      - "4200:4200"
+    volumes:
+      - .:/app
+      - frontend_node_modules:/app/node_modules
+      - /app/backend
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    command: >
+      sh -c "npm install &&
+      npm run start -- --host 0.0.0.0 --port 4200 --poll=1000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: DockerFile
+    container_name: sirespaldos-backend
+    ports:
+      - "3060:3060"
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: 3060
+      TZ: America/Mexico_City
+      DIR_RESPALDOS: /respaldos
+    volumes:
+      - ${DIR_RESPALDOS_HOST:-./respaldos-local}:/respaldos
+    # La base administrativa es la de backend/.env (DB_HOST, DB_USUARIO, ...).
+    # En local vive en el contenedor mysql-bd: se llega por su red y DB_HOST=mysql-bd.
+    networks:
+      - default
+      - mysql-bd-red
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+networks:
+  mysql-bd-red:
+    external: true
+
+volumes:
+  frontend_node_modules:

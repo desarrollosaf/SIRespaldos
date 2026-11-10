@@ -1,0 +1,89 @@
+/* =====================================================================
+   SIRespaldos · tema sobre Bootstrap 5
+   ===================================================================== */
+:root {
+  --tinta: #1b2434;
+  --tinta-2: #5c6a7e;
+  --linea: #dfe4ea;
+  --fondo: #f4f6f9;
+  --acento: #1f7a8c;
+  --ok: #1e7a3d;
+  --mal: #b3261e;
+  --curso: #2b6cb0;
+  --bs-body-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--tinta);
+  font-size: 0.925rem;
+}
+
+.tarjeta {
+  background: #fff;
+  border: 1px solid var(--linea);
+  border-radius: 0.6rem;
+  padding: 1rem 1.15rem;
+}
+
+.titulo-pagina {
+  font-size: 1.3rem;
+  font-weight: 650;
+  margin: 0;
+}
+.subtitulo {
+  color: var(--tinta-2);
+  font-size: 0.85rem;
+}
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.estado-exitoso { background: #e6f4ea; color: var(--ok); }
+.estado-fallido { background: #fbe9e7; color: var(--mal); }
+.estado-en_curso, .estado-en_cola { background: #e8f0fa; color: var(--curso); }
+.estado-depurado { background: #eef1f4; color: #5b6b7c; }
+
+.tabla-compacta {
+  font-size: 0.85rem;
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tinta-2);
+    font-weight: 600;
+  }
+  td { vertical-align: middle; }
+}
+
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 35, 0.45);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 6vh 16px;
+  z-index: 1050;
+  overflow-y: auto;
+}
+.modal-caja {
+  background: #fff;
+  border-radius: 0.7rem;
+  width: 100%;
+  max-width: 560px;
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.girar { display: inline-block; animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }

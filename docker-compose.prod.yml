@@ -1,0 +1,68 @@
+# Produccion.
+#   .env (junto a este compose):  DIR_RESPALDOS_HOST=/mnt/msa/respaldos
+#   backend/.env:                 DB_HOST, DB_PUERTO, DB_USUARIO, DB_PASSWORD, DB_NOMBRE
+#                                 (base administrativa en su servidor MySQL), JWT, etc.
+#
+# El proxy inverso del servidor debe enviar:
+#   /sirespaldos/          → puerto 8085 (frontend)
+#   /sirespaldos/backend/  → puerto 3060 (backend, sin buffering para /api/eventos)
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: DockerFile
+      args:
+        BASE_HREF: /sirespaldos/
+    container_name: sirespaldos-frontend
+    ports:
+      - "8085:80"
+    restart: always
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: DockerFile
+    container_name: sirespaldos-backend
+    env_file:
+      - ./backend/.env
+    environment:
+      PORT: 3060
+      DIR_RESPALDOS: /respaldos
+    ports:
+      - "3060:3060"
+    volumes:
+      - ${DIR_RESPALDOS_HOST:?defina DIR_RESPALDOS_HOST (carpeta de la MSA)}:/respaldos
+    restart: always
+
+  # Respaldo diario de la propia base administrativa a la MSA
+  # (<MSA>/_sistema/), 60 dias. Si se pierde el servidor, con esto y los
+  # archivos de la MSA se recupera todo el historial.
+  db-respaldo:
+    image: mariadb:10.5
+    container_name: sirespaldos-db-respaldo
+    env_file:
+      - ./backend/.env
+    environment:
+      TZ: America/Mexico_City
+    volumes:
+      - ${DIR_RESPALDOS_HOST:?defina DIR_RESPALDOS_HOST (carpeta de la MSA)}:/respaldos
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -o pipefail
+        mkdir -p /respaldos/_sistema
+        export MYSQL_PWD="$$DB_PASSWORD"
+        while true; do
+          f=/respaldos/_sistema/sirespaldos_$$(date +%F).sql.gz
+          if mysqldump -h "$$DB_HOST" -P "$${DB_PUERTO:-3306}" -u "$$DB_USUARIO" --single-transaction --skip-ssl "$$DB_NOMBRE" | gzip > "$$f.tmp"; then
+            mv "$$f.tmp" "$$f"
+          else
+            rm -f "$$f.tmp"
+          fi
+          find /respaldos/_sistema -name "*.sql.gz" -mtime +60 -delete
+          sleep 86400
+        done
+    restart: always
